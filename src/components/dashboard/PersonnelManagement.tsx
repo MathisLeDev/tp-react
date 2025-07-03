@@ -276,7 +276,7 @@ const PersonnelManagement: React.FC = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Sélectionner un rôle</option>
-                  <option value="Formateur">Formateur</option>
+                  <option value="Formateur">Formateur(rice)</option>
                   <option value="Referent">Référent</option>
                   <option value="Coordinateur">Coordinateur</option>
                   <option value="Directeur">Directeur</option>
