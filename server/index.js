@@ -477,7 +477,6 @@ app.delete('/api/personnel/:id', (req, res) => {
       }
       res.json({ message: 'Personnel deleted successfully', changes: this.changes });
     });
-  });
 });
 
 // Questions QCM

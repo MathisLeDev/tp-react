@@ -212,43 +212,7 @@ const DashboardHome: React.FC = () => {
           </div>
         </motion.div>
 
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="bg-white rounded-xl shadow-lg p-6"
-        >
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Actions rapides</h3>
-          <div className="space-y-3">
-            <button className="w-full p-4 text-left bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
-              <div className="flex items-center">
-                <FileText className="h-5 w-5 text-blue-600 mr-3" />
-                <div>
-                  <p className="font-medium text-gray-800">Traiter les candidatures</p>
-                  <p className="text-sm text-gray-500">{stats.candidatures_en_attente} en attente</p>
-                </div>
-              </div>
-            </button>
-            <button className="w-full p-4 text-left bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
-              <div className="flex items-center">
-                <Users className="h-5 w-5 text-green-600 mr-3" />
-                <div>
-                  <p className="font-medium text-gray-800">Créer une promotion</p>
-                  <p className="text-sm text-gray-500">Nouvelle session de formation</p>
-                </div>
-              </div>
-            </button>
-            <button className="w-full p-4 text-left bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
-              <div className="flex items-center">
-                <BookOpen className="h-5 w-5 text-purple-600 mr-3" />
-                <div>
-                  <p className="font-medium text-gray-800">Gérer les filières</p>
-                  <p className="text-sm text-gray-500">Modifier les programmes</p>
-                </div>
-              </div>
-            </button>
-          </div>
-        </motion.div>
+
       </div>
     </div>
   );
