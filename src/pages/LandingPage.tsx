@@ -100,13 +100,7 @@ const LandingPage: React.FC = () => {
               Des programmes certifiés Qualiopi pour une montée en compétences garantie.
             </p>
             <div className="flex justify-center space-x-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="button-primary px-8 py-4 rounded-full text-lg font-semibold text-white shadow-lg"
-              >
-                Découvrir nos formations
-              </motion.button>
+
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -301,18 +295,7 @@ const LandingPage: React.FC = () => {
             </motion.div>
           </div>
 
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="text-center mt-12"
-          >
-            <button className="bg-white px-8 py-4 rounded-full text-lg font-semibold text-gray-800 shadow-lg hover:shadow-xl transition-all inline-flex items-center">
-              <Download className="mr-2 h-5 w-5" />
-              Télécharger notre règlement
-            </button>
-          </motion.div>
+
         </div>
       </section>
 
