@@ -310,6 +310,46 @@ app.post('/api/apprenants', (req, res) => {
   );
 });
 
+app.put('/api/apprenants/:id', (req, res) => {
+  const { id } = req.params;
+  const { nom, prenom, email, telephone, promo_id, statut } = req.body; // Ajout de statut au cas où
+
+  // On ne met à jour que les champs fournis. Le statut pourrait être géré séparément.
+  // Pour l'instant, on se base sur les champs du formulaire actuel du frontend.
+  // Si 'statut' n'est pas dans req.body, il sera undefined et ne sera pas mis à jour par cette requête.
+  // Une meilleure approche serait de construire la requête SQL dynamiquement ou d'avoir des routes dédiées pour les changements de statut.
+
+  // Pour cette implémentation, nous mettons à jour tous les champs que le corps de la requête pourrait contenir,
+  // mais le formulaire frontend actuel n'enverra que nom, prenom, email, telephone, promo_id.
+  // Le champ statut dans la base est `statut TEXT DEFAULT 'inscrit'`.
+  // Si on veut permettre la modification du statut via cette route, il faudrait l'ajouter au formulaire du frontend.
+  // Pour l'instant, on va permettre sa mise à jour s'il est envoyé.
+
+  let query = 'UPDATE apprenants SET nom = ?, prenom = ?, email = ?, telephone = ?, promo_id = ?';
+  const params = [nom, prenom, email, telephone, promo_id];
+
+  if (statut !== undefined) {
+    query += ', statut = ?';
+    params.push(statut);
+  }
+
+  query += ' WHERE id = ?';
+  params.push(id);
+
+  db.run(query, params, function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    if (this.changes === 0) {
+      res.status(404).json({ message: 'Apprenant not found' });
+      return;
+    }
+    res.json({ message: 'Apprenant updated successfully', changes: this.changes });
+  });
+});
+
+
 app.delete('/api/apprenants/:id', (req, res) => {
   const { id } = req.params;
   // Note: We'll handle cascading deletes for comments in a later step by modifying table schema.
@@ -336,6 +376,28 @@ app.get('/api/personnel', (req, res) => {
     res.json(rows);
   });
 });
+
+
+app.put('/api/personnel/:id', (req, res) => {
+  const { id } = req.params;
+  const { nom, prenom, email, role, cv, experience, certifications } = req.body;
+  db.run(
+      'UPDATE personnel SET nom = ?, prenom = ?, email = ?, role = ?, cv = ?, experience = ?, certifications = ? WHERE id = ?',
+      [nom, prenom, email, role, cv, experience, certifications, id],
+      function(err) {
+        if (err) {
+          res.status(500).json({ error: err.message });
+          return;
+        }
+        if (this.changes === 0) {
+          res.status(404).json({ message: 'Personnel not found' });
+          return;
+        }
+        res.json({ message: 'Personnel updated successfully', changes: this.changes });
+      }
+  );
+});
+
 
 app.post('/api/personnel', (req, res) => {
   const { nom, prenom, email, role, cv, experience, certifications } = req.body;
