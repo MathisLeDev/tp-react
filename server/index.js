@@ -207,6 +207,43 @@ app.post('/api/filieres', (req, res) => {
   );
 });
 
+app.put('/api/filieres/:id', (req, res) => {
+  const { id } = req.params;
+  const { nom, description, objectifs, programme, modalites, accessibilite, image } = req.body;
+  db.run(
+    'UPDATE filieres SET nom = ?, description = ?, objectifs = ?, programme = ?, modalites = ?, accessibilite = ?, image = ? WHERE id = ?',
+    [nom, description, objectifs, programme, modalites, accessibilite, image, id],
+    function(err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      if (this.changes === 0) {
+        res.status(404).json({ message: 'Filiere not found' });
+        return;
+      }
+      res.json({ message: 'Filiere updated successfully', changes: this.changes });
+    }
+  );
+});
+
+app.delete('/api/filieres/:id', (req, res) => {
+  const { id } = req.params;
+  // TODO: Vérifier si la filière est utilisée par des promotions, candidatures, ou questions QCM avant de supprimer.
+  // Pour l'instant, suppression directe. Ajouter des vérifications si nécessaire.
+  db.run('DELETE FROM filieres WHERE id = ?', id, function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    if (this.changes === 0) {
+      res.status(404).json({ message: 'Filiere not found' });
+      return;
+    }
+    res.json({ message: 'Filiere deleted successfully', changes: this.changes });
+  });
+});
+
 // Promotions
 app.get('/api/promotions', (req, res) => {
   db.all(`
@@ -239,8 +276,34 @@ app.post('/api/promotions', (req, res) => {
   );
 });
 
+app.put('/api/promotions/:id', (req, res) => {
+  const { id } = req.params;
+  const { nom, filiere_id, referent_id, date_debut, date_fin, date_debut_examen, date_fin_examen, stage_obligatoire, objectifs, photo } = req.body;
+
+  // Convert boolean to integer for SQLite
+  const stageObligatoireInt = stage_obligatoire ? 1 : 0;
+
+  db.run(
+    'UPDATE promotions SET nom = ?, filiere_id = ?, referent_id = ?, date_debut = ?, date_fin = ?, date_debut_examen = ?, date_fin_examen = ?, stage_obligatoire = ?, objectifs = ?, photo = ? WHERE id = ?',
+    [nom, filiere_id, referent_id, date_debut, date_fin, date_debut_examen, date_fin_examen, stageObligatoireInt, objectifs, photo, id],
+    function(err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      if (this.changes === 0) {
+        res.status(404).json({ message: 'Promotion not found' });
+        return;
+      }
+      res.json({ message: 'Promotion updated successfully', changes: this.changes });
+    }
+  );
+});
+
 app.delete('/api/promotions/:id', (req, res) => {
   const { id } = req.params;
+  // TODO: Vérifier si la promotion est utilisée par des apprenants avant de supprimer.
+  // Pour l'instant, suppression directe. ON DELETE SET NULL pour apprenants.promo_id devrait gérer cela.
   db.run('DELETE FROM promotions WHERE id = ?', id, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -286,9 +349,48 @@ app.post('/api/apprenants', (req, res) => {
   );
 });
 
+app.put('/api/apprenants/:id', (req, res) => {
+  const { id } = req.params;
+  const { nom, prenom, email, telephone, promo_id, statut } = req.body; // Ajout de statut au cas où
+
+  // On ne met à jour que les champs fournis. Le statut pourrait être géré séparément.
+  // Pour l'instant, on se base sur les champs du formulaire actuel du frontend.
+  // Si 'statut' n'est pas dans req.body, il sera undefined et ne sera pas mis à jour par cette requête.
+  // Une meilleure approche serait de construire la requête SQL dynamiquement ou d'avoir des routes dédiées pour les changements de statut.
+
+  // Pour cette implémentation, nous mettons à jour tous les champs que le corps de la requête pourrait contenir,
+  // mais le formulaire frontend actuel n'enverra que nom, prenom, email, telephone, promo_id.
+  // Le champ statut dans la base est `statut TEXT DEFAULT 'inscrit'`.
+  // Si on veut permettre la modification du statut via cette route, il faudrait l'ajouter au formulaire du frontend.
+  // Pour l'instant, on va permettre sa mise à jour s'il est envoyé.
+
+  let query = 'UPDATE apprenants SET nom = ?, prenom = ?, email = ?, telephone = ?, promo_id = ?';
+  const params = [nom, prenom, email, telephone, promo_id];
+
+  if (statut !== undefined) {
+    query += ', statut = ?';
+    params.push(statut);
+  }
+
+  query += ' WHERE id = ?';
+  params.push(id);
+
+  db.run(query, params, function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    if (this.changes === 0) {
+      res.status(404).json({ message: 'Apprenant not found' });
+      return;
+    }
+    res.json({ message: 'Apprenant updated successfully', changes: this.changes });
+  });
+});
+
 app.delete('/api/apprenants/:id', (req, res) => {
   const { id } = req.params;
-  // Note: We'll handle cascading deletes for comments in a later step by modifying table schema.
+  // La table commentaires a ON DELETE CASCADE pour apprenant_id, donc les commentaires seront supprimés.
   db.run('DELETE FROM apprenants WHERE id = ?', id, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -328,29 +430,38 @@ app.post('/api/personnel', (req, res) => {
   );
 });
 
+app.put('/api/personnel/:id', (req, res) => {
+  const { id } = req.params;
+  const { nom, prenom, email, role, cv, experience, certifications } = req.body;
+  db.run(
+    'UPDATE personnel SET nom = ?, prenom = ?, email = ?, role = ?, cv = ?, experience = ?, certifications = ? WHERE id = ?',
+    [nom, prenom, email, role, cv, experience, certifications, id],
+    function(err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      if (this.changes === 0) {
+        res.status(404).json({ message: 'Personnel not found' });
+        return;
+      }
+      res.json({ message: 'Personnel updated successfully', changes: this.changes });
+    }
+  );
+});
+
 app.delete('/api/personnel/:id', (req, res) => {
   const { id } = req.params;
 
-  // Note: ON DELETE SET NULL for promotions.referent_id and ON DELETE CASCADE for formations_formateurs
-  // are now handled by the database schema.
-  // We can keep a check for referent_id as a user-friendly guard, or remove it if strict DB behavior is preferred.
-  // For now, let's rely on the DB constraints for formations_formateurs and keep the referent check.
+  // Les contraintes de clé étrangère sont définies comme suit:
+  // promotions.referent_id: FOREIGN KEY (referent_id) REFERENCES personnel(id) ON DELETE SET NULL
+  // formations_formateurs.personnel_id: FOREIGN KEY (personnel_id) REFERENCES personnel(id) ON DELETE CASCADE
 
-  db.get('SELECT COUNT(*) as count FROM promotions WHERE referent_id = ?', [id], (err, row) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    if (row.count > 0) {
-      // This check is somewhat redundant due to ON DELETE SET NULL, but provides a clearer error message.
-      // Alternatively, allow deletion and let DB handle setting referent_id to NULL.
-      // For this iteration, we'll keep the explicit block to inform the user.
-      res.status(400).json({ message: 'This staff member is a referent for one or more promotions. Deleting them will set these promotions to have no referent. Consider assigning a new referent first or confirm deletion.' });
-      // If direct deletion is preferred, remove this block and the check.
-      return;
-    }
+  // La suppression d'un membre du personnel mettra automatiquement referent_id à NULL dans les promotions
+  // et supprimera les formations associées dans formations_formateurs.
+  // Le check manuel précédent pour referent_id peut être retiré car la DB le gère.
 
-    db.run('DELETE FROM personnel WHERE id = ?', id, function(err) {
+  db.run('DELETE FROM personnel WHERE id = ?', id, function(err) {
       if (err) {
         // This could be due to other unexpected constraints or DB errors.
         if (err.message.includes('FOREIGN KEY constraint failed')) {
