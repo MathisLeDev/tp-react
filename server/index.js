@@ -239,6 +239,30 @@ app.post('/api/promotions', (req, res) => {
   );
 });
 
+app.put('/api/promotions/:id', (req, res) => {
+    const { id } = req.params;
+    const { nom, filiere_id, referent_id, date_debut, date_fin, date_debut_examen, date_fin_examen, stage_obligatoire, objectifs, photo } = req.body;
+
+    // Convert boolean to integer for SQLite
+    const stageObligatoireInt = stage_obligatoire ? 1 : 0;
+
+    db.run(
+        'UPDATE promotions SET nom = ?, filiere_id = ?, referent_id = ?, date_debut = ?, date_fin = ?, date_debut_examen = ?, date_fin_examen = ?, stage_obligatoire = ?, objectifs = ?, photo = ? WHERE id = ?',
+        [nom, filiere_id, referent_id, date_debut, date_fin, date_debut_examen, date_fin_examen, stageObligatoireInt, objectifs, photo, id],
+        function(err) {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+            if (this.changes === 0) {
+                res.status(404).json({ message: 'Promotion not found' });
+                return;
+            }
+            res.json({ message: 'Promotion updated successfully', changes: this.changes });
+        }
+    );
+});
+
 app.delete('/api/promotions/:id', (req, res) => {
   const { id } = req.params;
   db.run('DELETE FROM promotions WHERE id = ?', id, function(err) {
@@ -379,6 +403,26 @@ app.get('/api/questions/:filiereId', (req, res) => {
     }
     res.json(rows);
   });
+});
+
+app.put('/api/filieres/:id', (req, res) => {
+    const { id } = req.params;
+    const { nom, description, objectifs, programme, modalites, accessibilite, image } = req.body;
+    db.run(
+        'UPDATE filieres SET nom = ?, description = ?, objectifs = ?, programme = ?, modalites = ?, accessibilite = ?, image = ? WHERE id = ?',
+        [nom, description, objectifs, programme, modalites, accessibilite, image, id],
+        function(err) {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+            if (this.changes === 0) {
+                res.status(404).json({ message: 'Filiere not found' });
+                return;
+            }
+            res.json({ message: 'Filiere updated successfully', changes: this.changes });
+        }
+    );
 });
 
 app.post('/api/questions', (req, res) => {
